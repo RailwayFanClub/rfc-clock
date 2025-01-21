@@ -9,6 +9,7 @@
     const PARAM_NAME_TIME_LEN = "time-len";
     /** 現実1秒で模型時刻がどれくらい進むか[現実秒] */
     const PARAM_NAME_TIME_MULTIPLIER = "time-multiplier";
+    
 
     // modelTotalSecでの日付変更時刻[模型秒]
     // 例: 15 * 60 * 60 は模型時刻15:00:00
@@ -40,6 +41,11 @@
      */
     function getParamWithLocalStorage(name) {
         const paramValue = getParam(name);
+
+        if(name == PARAM_NAME_TIME_MULTIPLIER && paramValue == null){
+            return null;
+        }
+        
         if (paramValue != null) {
             console.log(name, paramValue);
             localStorage.setItem(name, paramValue);
@@ -93,6 +99,11 @@
         if (!isInfoTextSet) {
             const infotext = getParamWithLocalStorage(PARAM_NAME_INFOTEXT) || "";
             document.getElementById('infotext').innerHTML = infotext;
+            //設定項目にも反映
+            document.getElementById('infotext_input').value = infotext;
+            document.getElementById('time-multiplier').value = timeMultiplier;
+            document.getElementById('event').value = eventMode;
+
             isInfoTextSet = true;
         }
         const now = new Date();
@@ -108,9 +119,15 @@
         const modelMinuteNum = Math.abs(Math.floor((modelTotalSec / 60) % 60));
         const modelHour = numPad(modelHourNum);
         const modelMinute = numPad(modelMinuteNum);
+        const modelSec = numPad(Math.floor(modelTotalSec % 60));
         minute1 = modelHourNum;
 
-        document.getElementById('RFCClock').innerHTML = `${modelHour}:${modelMinute}`;
+        if(timeMultiplier <= 30){
+            document.getElementById('RFCClock').innerHTML = `${modelHour}:${modelMinute}:${modelSec}`;
+        }else{
+            document.getElementById('RFCClock').innerHTML = `${modelHour}:${modelMinute}`;
+        }
+
         document.getElementById('Calendar').innerHTML = `現在時刻 ${year}/${month}/${date} ${hour}:${minute}:${second}`;
 
         const now_ms = now.getMilliseconds();
@@ -125,6 +142,13 @@
             // ローカルストレージのキャッシュをリセットし、クエリに指定されたもののみを使用するようにする
             localStorage.clear();
             location.reload();
+        });
+
+        //Calendarクリックで、設定項目を表示
+        const calendar = document.getElementById('Calendar');
+        calendar.addEventListener('click', function () {
+            const setting = document.getElementById('setting');
+            setting.style.display = setting.style.display == 'block' ? 'none' : 'block';
         });
     })
 }
